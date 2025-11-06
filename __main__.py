@@ -1,0 +1,146 @@
+import pandas as pd
+import aleat as al
+#import matplotlib.pyplot as plt
+import numpy as np
+import statistics
+
+class par:
+    def __init__(self, comp, teste,acu):
+        self.comp = comp
+        self.teste = teste
+        self.acu=acu
+#PRECISO FAZER AS MEDIDAS SEPARADAS PARA CADA K
+Pares=[] #Todos os pares de vetores
+
+def Treino(a : int ,b : int):
+	k=a
+	r=b
+	# Lê o arquivo (ajuste o nome conforme o seu)
+	df = pd.read_csv("bezdekIris.data", header=None)
+
+	# Adiciona nomes às colunas
+	df.columns = ["sepal_length", "sepal_width", "petal_length", "petal_width", "class"]
+
+	# Remove linhas vazias (às vezes há uma no final)
+	df = df.dropna()
+
+	al.aleatorio(len(df)-1, r)
+
+	X = df[["sepal_length","sepal_width","petal_length","petal_width"]].to_numpy()
+	for pair_idx in range(int(r)):
+		# C e B sao matrizes "Pares",cada C[i] teste existe um B[i] comparação
+		Acu=[] #Todas as porcentagens de acertos por pares de vetores
+					
+		for w in range(int(k)): #Fazer varios teste para w ate k
+
+			comp_list = al.C[pair_idx]   
+			base_list = al.B[pair_idx]   
+			erro=0 #Taxa deee erro do par
+
+			for idx_c in range(len(comp_list)):
+				distances = []
+				supos=[] #SUPOSIÇÃO BASEADA NA MAIS PROXIMA
+				real=df.loc[int(comp_list[idx_c]), "class"] #CLASSE REAL DO ITEM C[IDX_C]
+							
+				for idx_b in range(len(base_list)):
+					# distância euclidiana entre as features
+					d = np.linalg.norm(X[comp_list[idx_c]] - X[base_list[idx_b]])
+					distances.append(float(d))
+					print(f"Distância entre C[{comp_list[idx_c]}] e B[{base_list[idx_b]}]: {d}")
+
+					#SUUPOSIÇAO K VEZES
+					for n in range(int(w)+1):
+						for i in range(int(len(distances))):
+							if float(min(distances))==float(distances[i]):
+								supos.append(df.loc[int(i), "class"])
+								distances[i]=10
+					#try:
+					mode= statistics.mode(supos)
+					if real != mode:
+						erro +=1
+					# except:
+						#    multi=statistics.multimode(supos)
+					
+		#MEDIDA DE ACURACIA DO PAR
+		Acu.append(round(float((len(comp_list) - erro)/len(comp_list)), 2))
+	Pares.append(par(comp_list, base_list,Acu))
+	list_acu=[]
+	for p in Pares:
+		list_acu.append(p.acu)                    # lista de listas 
+		
+	df_acc = pd.DataFrame(list_acu)                      # shape (n_pares, k)
+	for i in range(df_acc.shape[1]):
+		df_acc.columns.append("k={")  # nomeia colunas como k=1,...,k
+	df_acc.index = range(1, len(df_acc) + 1)             # index 1-based para os pares
+
+	# salvar em CSV
+	df_acc.to_csv("precision_pairs.csv", index_label="Par")
+	with open("precisoes.txt", "w", encoding="utf-8") as f:
+		f.write("PARES:" + "\n\n")
+		for i in range(len(Pares)):
+			f.write("PAR "+ str(i+1) + ":"  + "\n")
+			f.write("Vetor comparação: " + str(Pares[i].comp)  + "\n")
+			f.write("Vetor base: " + str(Pares[i].teste)  + "\n")
+			f.write("Acurácias: " + str(Pares[i].acu)  + "\n\n")
+
+
+def main() -> None:
+	#pres=pd.read_csv("precision_pairs.csv", header=None)
+	#acur=len(pres.columns)
+    
+	menu=input("digite\n\nT-Treino\nC-Classificacao\nS-Sair\nOpcao: ")
+        
+	while menu !="s":
+		menu=input("digite\n\nT-Treino\nC-Classificacao\nS-Sair\nOpcao: ")
+		match menu:
+			case "t":
+				k=input("Digite o número de vizinhos a serem considerados: ")
+				r=input("Digite o número de vetores aleatórios a serem gerados: ")
+				Treino(k,r)
+				
+			case "c":
+				Novo=[0,0,0,0,0]#Objeto a ser classificado
+				Novo[0]=input("\nsepal_length:")
+				Novo[1]=input("\nsepal_width:")
+				Novo[2]=input("\npetal_length:")
+				Novo[3]=input("\npetal_width:")
+				
+				key=input("\nVizinhos proximos a se considerar:")
+				if (int(key)>acur):
+					Treino(int(key), 100)
+					
+				Z = pres[[("k="+str(key))]].to_numpy()
+				print({Z})
+				
+				break
+				
+			case "s":
+				break
+			case _:
+				print("Opcao invalida\n")
+				break
+            
+
+                    
+
+                
+                
+                
+
+                
+
+
+                    
+
+
+   
+
+                
+
+    
+
+
+
+if __name__ == "__main__":
+    main()
+# ...existing code...
