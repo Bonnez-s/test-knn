@@ -62,15 +62,13 @@ def Treino(a : int ,b : int):
 						#    multi=statistics.multimode(supos)
 					
 		#MEDIDA DE ACURACIA DO PAR
-		Acu.append(round(float((len(comp_list) - erro)/len(comp_list)), 2))
+		Acu.append(round(float((len(comp_list) - erro)/len(comp_list)), 4))
 	Pares.append(par(comp_list, base_list,Acu))
 	list_acu=[]
 	for p in Pares:
 		list_acu.append(p.acu)                    # lista de listas 
-		
 	df_acc = pd.DataFrame(list_acu)                      # shape (n_pares, k)
-	for i in range(df_acc.shape[1]):
-		df_acc.columns.append("k={")  # nomeia colunas como k=1,...,k
+	df_acc.columns = [f"k={i+1}" for i in range(df_acc.shape[1])]  # nomeia colunas
 	df_acc.index = range(1, len(df_acc) + 1)             # index 1-based para os pares
 
 	# salvar em CSV
@@ -85,13 +83,15 @@ def Treino(a : int ,b : int):
 
 
 def main() -> None:
-	#pres=pd.read_csv("precision_pairs.csv", header=None)
-	#acur=len(pres.columns)
+	pres = pd.read_csv("precision_pairs.csv", index_col="Par")
+	acur=len(pres.columns)
     
-	menu=input("digite\n\nT-Treino\nC-Classificacao\nS-Sair\nOpcao: ")
+
+	menu="x"
         
 	while menu !="s":
-		menu=input("digite\n\nT-Treino\nC-Classificacao\nS-Sair\nOpcao: ")
+		k=acur
+		menu=input("\ndigite\n\nT-Treino\nC-Classificacao\nS-Sair\nOpcao: ")
 		match menu:
 			case "t":
 				k=input("Digite o número de vizinhos a serem considerados: ")
@@ -99,7 +99,14 @@ def main() -> None:
 				Treino(k,r)
 				
 			case "c":
-				Novo=[0,0,0,0,0]#Objeto a ser classificado
+				df = pd.read_csv("bezdekIris.data", header=None)
+				df.columns = ["sepal_length", "sepal_width", "petal_length", "petal_width", "class"]
+				X = df[["sepal_length","sepal_width","petal_length","petal_width"]].to_numpy()
+				Novo=[0,0,0,0]#Objeto a ser classificado
+				suposi=[]#Todas as classes de k
+				dist_suposi=[]
+
+
 				Novo[0]=input("\nsepal_length:")
 				Novo[1]=input("\nsepal_width:")
 				Novo[2]=input("\npetal_length:")
@@ -108,10 +115,28 @@ def main() -> None:
 				key=input("\nVizinhos proximos a se considerar:")
 				if (int(key)>acur):
 					Treino(int(key), 100)
-					
-				Z = pres[[("k="+str(key))]].to_numpy()
-				print({Z})
+				idx=[]
+				coluna = pres.iloc[: ,(k-1)].tolist()
+				coluna[0]=0
+				print(coluna)
+				for i in range(int(len(coluna))):
+					coluna[i]=float(coluna[i])
+				for i in range(int(len(coluna))):
+					if float(max(coluna ))==float(coluna[i]):
+						idx=al.B[i] #index do modelo
+				  
+
+				for i in idx:#distancia de novo para todos os vetores do modelo
+					d= np.linalg.norm(Novo - X[idx])
+					dist_suposi.append(float(d))
 				
+				for i in range(int(key)):
+					if float(min(dist_suposi))==float(dist_suposi[i]):
+						suposi.append(df.loc[int(i), "class"])
+						dist_suposi[i]=10
+						
+				print(statistics.mode(suposi))
+
 				break
 				
 			case "s":
